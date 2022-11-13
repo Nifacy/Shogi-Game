@@ -1,4 +1,4 @@
-from game.model.id_generator import IdGenerator
+from game_model.game.model.id_generator import IdGenerator
 
 
 class Player:
@@ -13,4 +13,4 @@ class Player:
         return first._id == second._id
 
     def __eq__(self, other: "Player") -> bool:
-        return self.equals(self, other)
+        return Player.equals(self, other)

@@ -1,8 +1,8 @@
 from itertools import product
 from typing import Tuple, Dict
 
-from game.model.cell import Cell
-from game.model.position import Position
+from game_model.game.model.cell import Cell
+from game_model.game.model.position import Position
 
 
 class UnavailablePosition(Exception):
@@ -34,22 +34,26 @@ class Board:
         return self._size
 
     def get_cell(self, pos: Position) -> Cell:
-        h, w = self.size
+        w, h = self.size
 
         if not(0 <= pos.x < w) or not(0 <= pos.y < h):
             raise UnavailablePosition(pos)
 
         return self._cells[pos]
 
-    def __eq__(self, other: "Board") -> bool:
-        if self.size != other.size:
+    @classmethod
+    def equals(cls, first: "Board", second: "Board") -> bool:
+        if first.size != second.size:
             return False
 
-        for pos in product(*map(range, self.size)):
-            self_figure = self.get_cell(pos).get_figure()
-            other_figure = self.get_cell(pos).get_figure()
+        for pos in product(*map(range, first.size)):
+            first_figure = second.get_cell(pos).get_figure()
+            second_figure = first.get_cell(pos).get_figure()
 
-            if self_figure != other_figure:
+            if first_figure != second_figure:
                 return False
 
         return True
+
+    def __eq__(self, other: "Board") -> bool:
+        return Board.equals(self, other)

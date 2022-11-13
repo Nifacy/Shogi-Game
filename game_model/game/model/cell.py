@@ -1,6 +1,6 @@
 from typing import Union
 
-from game.model.figure import Figure
+from game_model.game.model.figure import Figure
 
 
 class Cell:
@@ -20,3 +20,10 @@ class Cell:
 
     def is_empty(self) -> bool:
         return self.get_figure() is None
+
+    @classmethod
+    def equals(cls, first: "Cell", second: "Cell") -> bool:
+        return first.get_figure() == second.get_figure()
+
+    def __eq__(self, other: "Cell") -> bool:
+        return Cell.equals(self, other)

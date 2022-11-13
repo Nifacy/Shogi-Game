@@ -1,7 +1,7 @@
 from typing import Iterable, List
 
-from game.model import Player
-from game.model.figure import Figure
+from game_model.game.model import Player
+from game_model.game.model.figure import Figure
 
 
 class Prison:
@@ -24,3 +24,10 @@ class Prison:
     @property
     def figures(self) -> Iterable[Figure]:
         return tuple(self._figures)
+
+    @classmethod
+    def equals(cls, first: "Prison", second: "Prison") -> bool:
+        return (first._owner, first._figures) == (second._owner, second._figures)
+
+    def __eq__(self, other: "Prison") -> bool:
+        return Prison.equals(self, other)
