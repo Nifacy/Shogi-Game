@@ -1,9 +1,9 @@
 from pydantic import BaseModel
+from tortoise.contrib.pydantic import pydantic_model_creator
 
+from app.models import User
 
-class AccountInfo(BaseModel):
-    username: str
-    rating: int
+AccountInfo = pydantic_model_creator(cls=User, name='AccountInfo')
 
 
 class Registration(BaseModel):
