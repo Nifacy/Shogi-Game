@@ -16,7 +16,7 @@ class AccessData(BaseModel):
     token_type: str
 
 
-class PrivateRoom(BaseModel):
+class PrivateRoomInfo(BaseModel):
     room_id: int
     connect_key: str
 
