@@ -9,8 +9,8 @@ from tortoise.exceptions import IntegrityError, DoesNotExist
 
 from app import settings
 from app.actions import authenticate_user
-from app.models import User
-from app.schemas import Registration, AccountInfo, AccessData, PrivateRoomConnectPost, PrivateRoom, FoundRoom
+from app.models import User, Room, PrivateRoom
+from app.schemas import Registration, AccountInfo, AccessData, PrivateRoomConnectPost, PrivateRoomInfo, FoundRoom
 
 app = FastAPI()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
@@ -59,22 +59,52 @@ async def read_users_me(current_user: AccountInfo = Depends(get_current_user)):
     return current_user
 
 
-@app.get("/users/info/{username}")
-async def get_user_info(username: str) -> AccountInfo:
-    raise NotImplementedError
+@app.get("/users/info/{username}", response_model=AccountInfo, status_code=status.HTTP_302_FOUND)
+async def get_user_info(username: str):
+    try:
+        user = await User.get(username=username)
+    except DoesNotExist:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User doesn't exist")
+
+    return AccountInfo.from_tortoise_orm(user)
 
 
-@app.post("/room/private/connect", response_model=PrivateRoom)
-async def connect_ro_private_session(
+@app.post("/room/private/connect", response_model=PrivateRoomInfo, status_code=status.HTTP_200_OK)
+async def connect_ro_private_room(
         connect_data: PrivateRoomConnectPost = Depends(),
         current_user: AccountInfo = Depends(get_current_user)
 ):
-    raise NotImplementedError
+    user = await User.get(id=current_user.id)
+
+    if user.connected_room:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Already connected")
+
+    try:
+        private_room = await PrivateRoom.get(connection_key=connect_data.connect_key)
+    except DoesNotExist:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid connect key")
+
+    room = await private_room.room.first()
+    user.connected_room = room
+    await user.save()
+
+    return PrivateRoomInfo(room_id=room.id, connect_key=private_room.connection_key)
 
 
-@app.post("/room/private/create", response_model=PrivateRoom)
+@app.post("/room/private/create", response_model=PrivateRoomInfo)
 async def create_private_room(current_user: AccountInfo = Depends(get_current_user)):
-    raise NotImplementedError
+    user = await User.get(id=current_user.id)
+
+    if user.connected_room:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Already connected")
+
+    room = await Room.create()
+    private_room = await PrivateRoom.create(room=room, connection_key=str(room.id))
+
+    user.connected_room = room
+    await user.save()
+
+    return PrivateRoomInfo(room_id=room.id, connect_key=private_room.connection_key)
 
 
 @app.post("/room/search", response_model=FoundRoom)
