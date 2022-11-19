@@ -1,4 +1,4 @@
-from game_model.game.model import Player
+from game_model.game.model.player import Player
 
 
 class ExecuteCommandException(Exception):

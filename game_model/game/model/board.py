@@ -47,8 +47,11 @@ class Board:
             return False
 
         for pos in product(*map(range, first.size)):
-            first_figure = second.get_cell(pos).get_figure()
-            second_figure = first.get_cell(pos).get_figure()
+            first_figure = second.get_cell(Position(*pos)).get_figure()
+            second_figure = first.get_cell(Position(*pos)).get_figure()
+
+            if first_figure is None or second_figure is None:
+                return False
 
             if first_figure != second_figure:
                 return False

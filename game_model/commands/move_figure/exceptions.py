@@ -29,16 +29,16 @@ class MoveFigureException(ExecuteCommandException):
 class NonexistentPosition(MoveFigureException):
     __msg_template = "Позиции {position} не существует"
 
-    def __init__(self, player: Player, start: Position, end: Position):
-        super().__init__(player, start, end, self.__msg_template)
+    def __init__(self, player: Player, start: Position, end: Position, position: Position):
+        super().__init__(player, start, end, self.__msg_template.format(position=position))
 
 
-class FigureDoesntExists(ExecuteCommandException):
+class FigureDoesntExists(MoveFigureException):
     __msg_template = "Нет фигуры на позиции {position}"
     _position: Position
 
-    def __init__(self, player: Player, start: Position, end: Position):
-        super().__init__(player, self.__msg_template.format(position=position))
+    def __init__(self, player: Player, start: Position, end: Position, position: Position):
+        super().__init__(player, start, end, self.__msg_template.format(position=position))
         self._position = position
 
     @property
@@ -46,13 +46,13 @@ class FigureDoesntExists(ExecuteCommandException):
         return self._position
 
 
-class UnableToMoveFigure(ExecuteCommandException):
+class UnableToMoveFigure(MoveFigureException):
     __msg_template = "Фигура {figure} не может передвигаться на позицию {position}"
     _figure: Figure
     _position: Position
 
-    def __init__(self, player: Player, figure: Figure, position: Position):
-        super().__init__(player, self.__msg_template.format(figure=figure, position=position))
+    def __init__(self, player: Player, start: Position, end: Position, figure: Figure, position: Position):
+        super().__init__(player, start, end, self.__msg_template.format(figure=figure, position=position))
         self._figure = figure
         self._position = position
 
@@ -65,12 +65,12 @@ class UnableToMoveFigure(ExecuteCommandException):
         return self._position
 
 
-class MovingOnOccupiedCell(ExecuteCommandException):
+class MovingOnOccupiedCell(MoveFigureException):
     __msg_template = "Клетка на позиции {position} уже занята дружественной фигурой"
     _position: Position
 
-    def __init__(self, player: Player, position: Position):
-        super().__init__(player, self.__msg_template.format(position=position))
+    def __init__(self, player: Player, start: Position, end: Position, position: Position):
+        super().__init__(player, start, end, self.__msg_template.format(position=position))
         self._position = position
 
     @property
