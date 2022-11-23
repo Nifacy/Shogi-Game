@@ -15,7 +15,6 @@ from app.actions import authenticate_user, send_command
 from app.models import User, Room, PrivateRoom
 from app.room_message_sender import RoomMessageSender
 from app.schemas import Registration, AccountInfo, AccessData, PrivateRoomConnectPost, PrivateRoomInfo, FoundRoom
-from game_model.game.model import GameStatus
 
 app = FastAPI()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")

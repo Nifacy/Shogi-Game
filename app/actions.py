@@ -6,6 +6,7 @@ from app.events import CommandExecuteException
 from app.manager_builder import build_manager
 from app.models import User, Room
 from game_model.commands.move_figure.command import MoveFigure
+from game_model.commands.resign import Resign
 from game_model.game.manager.command import Command
 from game_model.game.manager.exceptions import ExecuteCommandException
 from game_model.game.model import Player, Position
@@ -30,6 +31,9 @@ def get_command(room_id: int, player: Player, command: dict) -> Command:
         start = Position(*command["from"])
         end = Position(*command["to"])
         return MoveFigure(player=player, start=start, end=end)
+
+    if message_id == "turn.resign":
+        return Resign(player=player)
 
     DomainEvents.raise_event(CommandExecuteException.EXECUTE_ERROR, detail="unknown command", player_id=player.id, room_id=room_id)
 
