@@ -76,3 +76,16 @@ class MovingOnOccupiedCell(MoveFigureException):
     @property
     def position(self) -> Position:
         return self._position
+
+
+class UnavailableFigure(MoveFigureException):
+    __msg_template = "Фигура {figure} не принадлежит игроку"
+    _figure: Figure
+
+    def __init__(self, player: Player, start: Position, end: Position, figure: Figure):
+        super().__init__(player, start, end, self.__msg_template.format(figure=figure))
+        self._figure = figure
+
+    @property
+    def figure(self):
+        return self._figure

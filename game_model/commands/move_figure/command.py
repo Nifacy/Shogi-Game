@@ -1,8 +1,12 @@
 from game_model.commands.base.command import BaseCommand
 from game_model.commands.move_figure.exceptions import NonexistentPosition, FigureDoesntExists, UnableToMoveFigure, \
-    MovingOnOccupiedCell
+    MovingOnOccupiedCell, UnavailableFigure
 from game_model.game.model import GameState, Position, Player
 from game_model.game.model.board import UnavailablePosition, Board
+
+
+def _rotate_position(position: Position) -> Position:
+    return Position(x=-position.x, y=-position.y)
 
 
 class MoveFigure(BaseCommand):
@@ -34,6 +38,12 @@ class MoveFigure(BaseCommand):
             x=self._end_position.x - self._start_position.x,
             y=self._end_position.y - self._start_position.y
         )
+
+        if self._player == state.second_player:
+            move_direction = _rotate_position(move_direction)
+
+        if figure.owner != self._player:
+            raise UnavailableFigure(player=self._player, start=self._start_position, end=self._end_position, figure=figure)
 
         if not figure.can_move(move_direction):
             raise UnableToMoveFigure(player=self._player, start=self._start_position, end=self._end_position, position=move_direction, figure=figure)
