@@ -5,8 +5,8 @@ class Player:
     _id_generator: IdGenerator = IdGenerator()
     _id: int
 
-    def __init__(self):
-        self._id = self._id_generator.generate_id()
+    def __init__(self, id: int = None):
+        self._id = id or self._id_generator.generate_id()
 
     @staticmethod
     def equals(first: "Player", second: "Player") -> bool:
@@ -14,3 +14,7 @@ class Player:
 
     def __eq__(self, other: "Player") -> bool:
         return Player.equals(self, other)
+
+    @property
+    def id(self) -> int:
+        return self._id

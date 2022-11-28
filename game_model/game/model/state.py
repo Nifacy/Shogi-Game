@@ -1,6 +1,5 @@
+from dataclasses import dataclass
 from enum import Enum, auto
-from typing import NamedTuple
-
 from game_model.game.model import Player, Board, Prison
 
 
@@ -13,7 +12,8 @@ class GameStatus(Enum):
     DRAW = auto()
 
 
-class GameState(NamedTuple):
+@dataclass
+class GameState:
     status: GameStatus
 
     first_player: Player

@@ -1,8 +1,12 @@
 from game_model.commands.base.command import BaseCommand
 from game_model.commands.move_figure.exceptions import NonexistentPosition, FigureDoesntExists, UnableToMoveFigure, \
-    MovingOnOccupiedCell
+    MovingOnOccupiedCell, UnavailableFigure
 from game_model.game.model import GameState, Position, Player
 from game_model.game.model.board import UnavailablePosition, Board
+
+
+def _rotate_position(position: Position) -> Position:
+    return Position(x=-position.x, y=-position.y)
 
 
 class MoveFigure(BaseCommand):
@@ -14,21 +18,20 @@ class MoveFigure(BaseCommand):
         self._start_position = start
         self._end_position = end
 
-    def _check_cell_existence(self, board: Board, position: Position):
+    def _get_cell(self, board: Board, position: Position):
         try:
             return board.get_cell(position)
         except UnavailablePosition:
-            raise NonexistentPosition(player=self._player, position=position)
+            raise NonexistentPosition(player=self._player, start=self._start_position, end=self._end_position, position=position)
 
     def _check_figure_existence(self, board: Board, position: Position):
         if board.get_cell(position).is_empty():
-            raise FigureDoesntExists(player=self._player, position=self._start_position)
+            raise FigureDoesntExists(player=self._player, start=self._start_position, end=self._end_position, position=position)
 
     def action(self, state: GameState):
-        self._check_cell_existence(board=state.board, position=self._end_position)
-        self._check_cell_existence(board=state.board, position=self._start_position)
+        end_cell = self._get_cell(board=state.board, position=self._end_position)
+        start_cell = self._get_cell(board=state.board, position=self._start_position)
         self._check_figure_existence(state.board, self._start_position)
-
 
         figure = start_cell.get_figure()
         move_direction = Position(
@@ -36,11 +39,17 @@ class MoveFigure(BaseCommand):
             y=self._end_position.y - self._start_position.y
         )
 
+        if self._player == state.second_player:
+            move_direction = _rotate_position(move_direction)
+
+        if figure.owner != self._player:
+            raise UnavailableFigure(player=self._player, start=self._start_position, end=self._end_position, figure=figure)
+
         if not figure.can_move(move_direction):
-            raise UnableToMoveFigure(player=self._player, position=move_direction, figure=figure)
+            raise UnableToMoveFigure(player=self._player, start=self._start_position, end=self._end_position, position=move_direction, figure=figure)
 
         if not end_cell.is_empty() and end_cell.get_figure().owner == figure.owner:
-            raise MovingOnOccupiedCell(player=self._player, position=self._end_position)
+            raise MovingOnOccupiedCell(player=self._player, start=self._start_position, end=self._end_position, position=self._end_position)
 
         start_cell.remove_figure()
         end_cell.put_figure(figure=figure)

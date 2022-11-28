@@ -1,5 +1,6 @@
 from abc import abstractmethod, ABC
 
+from game_model.commands.base.exceptions import UnknownPlayer, GameEnded, OutOfTurn
 from game_model.game.manager.command import Command
 from game_model.game.model import GameState
 from game_model.game.model.state import GameStatus
