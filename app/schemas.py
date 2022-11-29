@@ -27,3 +27,7 @@ class PrivateRoomConnectPost(BaseModel):
 
 class FoundRoom(BaseModel):
     room_id: int
+
+class RatingIncrement(BaseModel):
+    min : int
+    max : int
