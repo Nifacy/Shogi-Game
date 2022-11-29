@@ -12,9 +12,10 @@ class User(Model):
     id = fields.IntField(pk=True)
     username = fields.CharField(50, unique=True)
     password_hash = fields.CharField(128)
-    rating = fields.IntField(default=0)
+    rating = fields.IntField(default=1000)
     connected_room: fields.ForeignKeyNullableRelation["Room"] = fields.ForeignKeyField(
         model_name="models.Room", related_name="connected_players", null=True)
+    inWaiting = fields.BooleanField(default=False)
 
     def verify_password(self, password):
         return bcrypt.verify(password, self.password_hash)
@@ -50,6 +51,9 @@ class User(Model):
                     room_id=room.id
                 )
 
+class Player(Model):
+    id = fields.IntField(pk=True)
+    user = fields.OneToOneField(model_name="models.User", related_name="player")
 
 class Room(Model):
     id = fields.IntField(pk=True)

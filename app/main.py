@@ -12,9 +12,9 @@ from tortoise.exceptions import IntegrityError, DoesNotExist, NoValuesFetched
 
 from app import settings
 from app.actions import authenticate_user, send_command
-from app.models import User, Room, PrivateRoom
+from app.models import User, Room, PrivateRoom, Player
 from app.room_message_sender import RoomMessageSender
-from app.schemas import Registration, AccountInfo, AccessData, PrivateRoomConnectPost, PrivateRoomInfo, FoundRoom
+from app.schemas import Registration, AccountInfo, AccessData, PrivateRoomConnectPost, PrivateRoomInfo, FoundRoom, RatingIncrement
 
 app = FastAPI()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
@@ -70,18 +70,18 @@ async def get_user_info(username: str):
     except DoesNotExist:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User doesn't exist")
 
-    return AccountInfo.from_tortoise_orm(user)
+    return await AccountInfo.from_tortoise_orm(user)
 
 
 @app.post("/room/private/connect", response_model=PrivateRoomInfo, status_code=status.HTTP_200_OK)
-async def connect_ro_private_room(
+async def connect_to_private_room(
         connect_data: PrivateRoomConnectPost = Depends(),
         current_user: AccountInfo = Depends(get_current_user)
 ):
     user = await User.get(id=current_user.id)
 
     if user.connected_room:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Already connected")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Already connected to a room")
 
     try:
         private_room = await PrivateRoom.get(connection_key=connect_data.connect_key)
@@ -104,7 +104,7 @@ async def create_private_room(current_user: AccountInfo = Depends(get_current_us
     user = await User.get(id=current_user.id)
 
     if user.connected_room:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Already connected")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Already connected to a room")
 
     room = await Room.create()
     private_room = await PrivateRoom.create(room=room, connection_key=str(room.id))
@@ -116,8 +116,38 @@ async def create_private_room(current_user: AccountInfo = Depends(get_current_us
 
 
 @app.post("/room/search", response_model=FoundRoom)
-async def find_opponent(user: AccountInfo = Depends(get_current_user)):
-    raise NotImplementedError
+async def find_opponent(
+    increment: RatingIncrement = Depends(),
+    current_user: AccountInfo = Depends(get_current_user)
+):
+
+    user = await User.get(id=current_user.id)
+
+    if user.connected_room:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Already connected to a room")
+
+    if user.inWaiting:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Already added to the waiting room")
+    
+    players_in_waiting = await Player.all()
+
+    for player in players_in_waiting:
+        y = await player.user
+        if user.rating - increment.min < y.rating and y.rating < user.rating + increment.max:
+            user.connected_room = await y.connected_room
+            await user.save()
+            await player.delete()
+            break
+    else:
+        room = await Room.create()
+        user.connected_room = room
+        await user.save()
+        player = await Player.create(user=user)
+
+    room = await user.connected_room
+
+    return FoundRoom(room_id=room.id)
+
 
 
 @app.websocket("/room/connect")
