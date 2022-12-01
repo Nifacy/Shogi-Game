@@ -1,14 +1,19 @@
 import asyncio
+
+from ddd_domain_events import DomainEvents
 from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
+
 from app.actions import send_command
+from app.dependencies import get_current_user
 
 from app.models import Room, User
+from app.room_message_sender import RoomMessageSender
 
 
 router = APIRouter()
 
 
-@router.websocket("/room/connect")
+@router.websocket("/connect")
 async def connect_to_game_session(websocket: WebSocket, token: str, room_id: int):
     await websocket.accept()
 
@@ -52,12 +57,3 @@ async def connect_to_game_session(websocket: WebSocket, token: str, room_id: int
         sender.stop()
 
     await websocket.close()
-
-
-register_tortoise(
-    app,
-    db_url='sqlite://db.sqlite3',
-    modules={'models': ['app.models']},
-    generate_schemas=True,
-    add_exception_handlers=True
-)
