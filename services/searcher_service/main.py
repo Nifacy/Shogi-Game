@@ -25,9 +25,9 @@ class SuccessMessage(BaseModel):
 
 
 db: Dict[str, WaitingPlayer] = dict()
-service = RPCService("searcher_service", "amqp://guest:guets@localhost")
+service = RPCService("searcher_service", "amqp://guest:guest@localhost")
 room_events_publisher = AmqpEventPublisher("searcher_service.search.events")
-session_service_adapter = SessionServiceAdapter()
+session_service_adapter = None
 
 
 def find_player(parameters: SearchParameters) -> Union[None, WaitingPlayer]:
@@ -83,7 +83,12 @@ service.bind("cancel", cancel_search)
 
 
 async def main():
+    global session_service_adapter
+
+    session_service_adapter = SessionServiceAdapter()
+
     await room_events_publisher.connect()
+    await session_service_adapter.connect()
     await service.run()
     await asyncio.Future()
 
