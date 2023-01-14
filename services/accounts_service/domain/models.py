@@ -27,3 +27,6 @@ class AccountModel:
         if value < 0:
             raise ValueError('Rating must be positive or 0')
         self._rating = value
+
+    def __repr__(self):
+        return f'{type(self).__name__}(username={self.username!r}, rating={self.rating!r})'
