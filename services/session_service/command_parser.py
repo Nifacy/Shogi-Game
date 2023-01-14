@@ -1,3 +1,4 @@
+
 from contracts import session_service
 from game_model.commands.move_figure.command import MoveFigure
 from game_model.commands.resign import Resign
