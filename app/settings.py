@@ -1,3 +1,0 @@
-JWT_SECRET = 'MyWifeLeftMe;('
-ALGORITHM = 'HS256'
-
