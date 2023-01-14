@@ -7,9 +7,6 @@ from game_model.game.model import GameState, Player
 from services.session_service.domain.factories import manager_factory
 
 
-# Exceptions
-
-
 class PlayerNotInSession(Exception):
     _tmp = "Player '{player_name}' not in session '{session_id}'"
 
@@ -19,12 +16,9 @@ class PlayerNotInSession(Exception):
         self.player_name = player_name
 
 
-class PlayerConnectionState(Enum):
+class PlayerConnectionState(str, Enum):
     CONNECTED = "connected"
     DISCONNECTED = "disconnected"
-
-
-# Models
 
 
 @dataclass
@@ -33,7 +27,6 @@ class PlayerModel(Player):
 
     def __post_init__(self):
         super().__init__()
-        print(f"Created player Player({self._name}, {self._id})")
 
     @property
     def name(self) -> str:

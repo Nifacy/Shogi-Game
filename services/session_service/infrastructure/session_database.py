@@ -1,58 +1,95 @@
-from copy import deepcopy
+import json
 
+from tortoise import Model, fields, Tortoise
 from services.session_service.domain.adapters import SessionStorage, NotExists
 from services.session_service.domain.factories import state_factory
 from services.session_service.domain.models import SessionModel, PlayerConnectionState, PlayerModel
+from settings import settings
+from state_encoder import StateEncoder
 
 
-def session_factory(session_id: int, first_player_name: str, second_player_name: str) -> SessionModel:
-    first_player = PlayerModel(_name=first_player_name)
-    second_player = PlayerModel(_name=second_player_name)
-
-    session = SessionModel(
-        _session_id=session_id,
-        _players=(first_player, second_player),
-        _player_connections={
-            first_player.name: PlayerConnectionState.DISCONNECTED,
-            second_player.name: PlayerConnectionState.DISCONNECTED
-        },
-        _state=state_factory(first_player=first_player, second_player=second_player))
-
-    return session
+class SessionDBModel(Model):
+    id = fields.IntField(pk=True)
+    connected_players: fields.ReverseRelation['SessionPlayerDBModel']
+    state = fields.JSONField(
+        encoder=lambda x: json.dumps(StateEncoder.encode(x)),
+        decoder=lambda x: StateEncoder.decode(json.loads(x))
+    )
 
 
-class DefaultSessionDatabase(SessionStorage):
-    _db: dict
-    _last_id: int
+class SessionPlayerDBModel(Model):
+    name = fields.TextField()
+    connection_state = fields.CharEnumField(PlayerConnectionState, default=PlayerConnectionState.DISCONNECTED)
+    connected_session: fields.ForeignKeyRelation[SessionDBModel] = fields.ForeignKeyField(
+        'models.SessionDBModel', related_name='connected_players'
+    )
 
-    def __init__(self):
-        self._last_id = 0
-        self._db = dict()
 
-    def _generate_id(self):
-        self._last_id += 1
-        return self._last_id
+class SessionDatabase(SessionStorage):
+    async def connect(self):
+        await Tortoise.init(
+            db_url=settings.postgres_dsn,
+            modules={'models': ['services.session_service.infrastructure.session_database']}
+        )
 
-    def create(self, first_player_name: str, second_player_name: str) -> SessionModel:
-        new_session = session_factory(self._generate_id(), first_player_name, second_player_name)
-        self._db[new_session.id] = new_session
-        return new_session
+        await Tortoise.generate_schemas()
 
-    def get(self, session_id: int) -> SessionModel:
-        if session_id not in self._db:
+    async def _serialize_session(self, record: SessionDBModel) -> SessionModel:
+        player_records = await record.connected_players.all()
+        first_player, second_player = [PlayerModel(_name=player.name) for player in player_records]
+
+        return SessionModel(
+            _session_id=record.id,
+            _players=(first_player, second_player),
+            _player_connections={
+                first_player.name: player_records[0].connection_state,
+                second_player.name: player_records[1].connection_state
+            },
+            _state=record.state
+        )
+
+    async def create(self, first_player_name: str, second_player_name: str) -> SessionModel:
+        first_player, second_player = PlayerModel(first_player_name), PlayerModel(second_player_name)
+        state = state_factory(first_player=first_player, second_player=second_player)
+
+        session_record = await SessionDBModel.create(state=state)
+        await SessionPlayerDBModel.create(name=first_player.name, connected_session=session_record)
+        await SessionPlayerDBModel.create(name=second_player_name, connected_session=session_record)
+
+        return await self._serialize_session(session_record)
+
+    async def get(self, session_id: int) -> SessionModel:
+        record = await SessionDBModel.filter(id=session_id).first()
+
+        if record is None:
             raise NotExists(session_id=session_id)
 
-        return self._db[session_id]
+        return await self._serialize_session(record)
 
-    def update(self, updated_data: SessionModel) -> SessionModel:
-        if updated_data.id not in self._db:
+    async def update(self, updated_data: SessionModel) -> SessionModel:
+        record = await SessionDBModel.filter(id=updated_data.id).first()
+
+        if record is None:
             raise NotExists(session_id=updated_data.id)
 
-        self._db[updated_data.id] = updated_data
+        players = await record.connected_players.all()
+        record.state = updated_data.state
+        players[0].connection_state = updated_data._player_connections[players[0].name]
+        players[1].connection_state = updated_data._player_connections[players[1].name]
+
+        await players[0].save()
+        await players[1].save()
+        await record.save()
+
         return updated_data
 
-    def remove(self, session_id: int):
-        if session_id not in self._db:
+    async def remove(self, session_id: int):
+        record = await SessionDBModel.filter(id=session_id).first()
+
+        if record is None:
             raise NotExists(session_id=session_id)
 
-        del self._db[session_id]
+        for player in record.connected_players:
+            await player.delete()
+
+        await record.delete()

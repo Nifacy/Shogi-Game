@@ -1,18 +1,8 @@
-from enum import Enum
-
-from ddd_domain_events import DomainEvents
-
 from game_model.game.manager.command import Command
 from game_model.game.model import GameStatus
 from services.session_service.domain.adapters import SessionStorage
+from services.session_service.domain.events import *
 from services.session_service.domain.models import SessionModel
-
-
-class SessionEvents(Enum):
-    PLAYER_CONNECTED = "PLAYER_CONNECTED"
-    PLAYER_DISCONNECTED = "PLAYER_DISCONNECTED"
-    STATE_CHANGED = "STATE_CHANGED"
-    GAME_ENDED = "GAME_ENDED"
 
 
 class CreateSession:
@@ -21,11 +11,12 @@ class CreateSession:
     def __init__(self, storage: SessionStorage):
         self._storage = storage
 
-    def __call__(self, first_player_name: str, second_player_name: str) -> SessionModel:
-        session = self._storage.create(first_player_name, second_player_name)
+    async def __call__(self, first_player_name: str, second_player_name: str) -> SessionModel:
+        session = await self._storage.create(first_player_name, second_player_name)
+        print(session)
         session.disconnect(first_player_name)
         session.disconnect(second_player_name)
-        self._storage.update(session)
+        await self._storage.update(session)
 
         return session
 
@@ -36,16 +27,15 @@ class ConnectToSession:
     def __init__(self, storage: SessionStorage):
         self._storage = storage
 
-    def __call__(self, player_name: str, session_id: int):
-        session = self._storage.get(session_id)
+    async def __call__(self, player_name: str, session_id: int):
+        session = await self._storage.get(session_id)
         session.connect(player_name=player_name)
-        self._storage.update(session)
+        await self._storage.update(session)
 
-        DomainEvents.raise_event(
-            event_type=SessionEvents.PLAYER_CONNECTED,
+        await session_events.on_player_connected(OnPlayerConnectedMessage(
             session_id=session_id,
             player_name=player_name
-        )
+        ))
 
 
 class DisconnectFromSession:
@@ -54,16 +44,15 @@ class DisconnectFromSession:
     def __init__(self, storage: SessionStorage):
         self._storage = storage
 
-    def __call__(self, player_name: str, session_id: int):
-        session = self._storage.get(session_id)
-        session.disconnect(player_name=player_name)
-        self._storage.update(session)
+    async def __call__(self, player_name: str, session_id: int):
+        session = await self._storage.get(session_id)
+        await session.disconnect(player_name=player_name)
+        await self._storage.update(session)
 
-        DomainEvents.raise_event(
-            event_type=SessionEvents.PLAYER_DISCONNECTED,
+        await session_events.on_player_disconnected(OnPlayerDisconnectedMessage(
             session_id=session_id,
             player_name=player_name
-        )
+        ))
 
 
 class GetPlayer:
@@ -72,8 +61,8 @@ class GetPlayer:
     def __init__(self, storage: SessionStorage):
         self._storage = storage
 
-    def __call__(self, player_name: str, session_id: int):
-        session = self._storage.get(session_id)
+    async def __call__(self, player_name: str, session_id: int):
+        session = await self._storage.get(session_id)
         return session.get_player(player_name)
 
 
@@ -83,32 +72,29 @@ class ExecuteCommand:
     def __init__(self, storage: SessionStorage):
         self._storage = storage
 
-    def __call__(self, session_id: int, command: Command):
-        session = self._storage.get(session_id)
-        session.execute_command(command)
-        self._storage.update(session)
+    async def __call__(self, session_id: int, command: Command):
+        session = await self._storage.get(session_id)
+        await session.execute_command(command)
+        await self._storage.update(session)
 
-        DomainEvents.raise_event(
-            event_type=SessionEvents.STATE_CHANGED,
+        await session_events.on_state_changed(OnStateChangedMessage(
             session_id=session_id,
             changed_state=session.state
-        )
+        ))
 
         if session.state.status == GameStatus.SECOND_PLAYER_WIN:
-            DomainEvents.raise_event(
-                event_type=SessionEvents.GAME_ENDED,
+            await session_events.on_game_ended(OnGameEndedMessage(
                 session_id=session.id,
                 winner=session.get_players()[1]
-            )
-            self._storage.remove(session_id)
+            ))
+            await self._storage.remove(session_id)
 
         if session.state.status == GameStatus.FIRST_PLAYER_WIN:
-            DomainEvents.raise_event(
-                event_type=SessionEvents.GAME_ENDED,
+            await session_events.on_game_ended(OnGameEndedMessage(
                 session_id=session.id,
                 winner=session.get_players()[0]
-            )
-            self._storage.remove(session_id)
+            ))
+            await self._storage.remove(session_id)
 
 
 class GetSession:
@@ -118,4 +104,4 @@ class GetSession:
         self._storage = storage
 
     async def __call__(self, session_id: int) -> SessionModel:
-        return self._storage.get(session_id)
+        return await self._storage.get(session_id)

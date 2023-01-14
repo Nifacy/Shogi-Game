@@ -13,17 +13,17 @@ class NotExists(Exception):
 
 class SessionStorage(ABC):
     @abstractmethod
-    def create(self, first_player_name: str, second_player_name: str) -> SessionModel:
+    async def create(self, first_player_name: str, second_player_name: str) -> SessionModel:
         raise NotImplementedError()
 
     @abstractmethod
-    def get(self, session_id: int) -> SessionModel:
+    async def get(self, session_id: int) -> SessionModel:
         raise NotImplementedError()
 
     @abstractmethod
-    def update(self, updated_data: SessionModel) -> SessionModel:
+    async def update(self, updated_data: SessionModel) -> SessionModel:
         raise NotImplementedError()
 
     @abstractmethod
-    def remove(self, session_id: int):
+    async def remove(self, session_id: int):
         raise NotImplementedError()
