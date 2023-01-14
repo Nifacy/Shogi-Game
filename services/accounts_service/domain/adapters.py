@@ -30,17 +30,17 @@ class NotExists(Exception):
 
 class AccountStorage(ABC):
     @abstractmethod
-    def create(self, username: str) -> AccountModel:
+    async def create(self, username: str) -> AccountModel:
         raise NotImplementedError()
 
     @abstractmethod
-    def get(self, username: str) -> AccountModel:
+    async def get(self, username: str) -> AccountModel:
         raise NotImplementedError()
 
     @abstractmethod
-    def update(self, updated_data: AccountModel) -> AccountModel:
+    async def update(self, updated_data: AccountModel) -> AccountModel:
         raise NotImplementedError()
 
     @abstractmethod
-    def remove(self, username: str):
+    async def remove(self, username: str):
         raise NotImplementedError()

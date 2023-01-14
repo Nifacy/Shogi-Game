@@ -8,8 +8,8 @@ class CreateAccount:
     def __init__(self, storage: AccountStorage):
         self._storage = storage
 
-    def __call__(self, username: str) -> AccountModel:
-        return self._storage.create(username)
+    async def __call__(self, username: str) -> AccountModel:
+        return await self._storage.create(username)
 
 
 class RemoveAccount:
@@ -18,8 +18,8 @@ class RemoveAccount:
     def __init__(self, storage: AccountStorage):
         self._storage = storage
 
-    def __call__(self, username: str):
-        self._storage.remove(username)
+    async def __call__(self, username: str):
+        await self._storage.remove(username)
 
 
 class GetAccount:
@@ -28,8 +28,8 @@ class GetAccount:
     def __init__(self, storage: AccountStorage):
         self._storage = storage
 
-    def __call__(self, username: str) -> AccountModel:
-        return self._storage.get(username)
+    async def __call__(self, username: str) -> AccountModel:
+        return await self._storage.get(username)
 
 
 class UpdateAccount:
@@ -38,5 +38,5 @@ class UpdateAccount:
     def __init__(self, storage: AccountStorage):
         self._storage = storage
 
-    def __call__(self, updated: AccountModel) -> AccountModel:
-        return self._storage.update(updated)
+    async def __call__(self, updated: AccountModel) -> AccountModel:
+        return await self._storage.update(updated)
