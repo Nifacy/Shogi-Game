@@ -74,12 +74,12 @@ class ExecuteCommand:
 
     async def __call__(self, session_id: int, command: Command):
         session = await self._storage.get(session_id)
-        await session.execute_command(command)
+        session.execute_command(command)
         await self._storage.update(session)
 
         await session_events.on_state_changed(OnStateChangedMessage(
             session_id=session_id,
-            changed_state=session.state
+            state=session.state
         ))
 
         if session.state.status == GameStatus.SECOND_PLAYER_WIN:

@@ -37,7 +37,7 @@ async def on_player_disconnected(message: OnPlayerDisconnectedMessage):
 
 async def on_game_ended(message: OnGameEndedMessage):
     message = {
-        "event_type": SessionEvents.GAME_ENDED.value,
+        "event_type": 'GAME_ENDED',
         "session_id": message.session_id,
         "winner": message.winner.name
     }

@@ -6,7 +6,7 @@ class Player:
     _id: int
 
     def __init__(self, id: int = None):
-        self._id = id or self._id_generator.generate_id()
+        self._id = id if id is not None else self._id_generator.generate_id()
 
     @staticmethod
     def equals(first: "Player", second: "Player") -> bool:
@@ -18,3 +18,6 @@ class Player:
     @property
     def id(self) -> int:
         return self._id
+
+    def __repr__(self):
+        return f'Player(id={self._id})'

@@ -4,7 +4,7 @@ from rpc_service import RpcServiceBuilder
 from rpc_service.utils import ServiceLauncher
 from services.private_room_service import infrastructure, event_handlers
 from services.private_room_service.methods import Implementation
-from settings import settings
+from .settings import settings
 
 client = infrastructure.SessionServiceClient()
 db = infrastructure.DefaultStorage()
@@ -17,7 +17,7 @@ loop = asyncio.get_event_loop()
 
 
 async def open_connections():
-    await db.connect()
+    await db.connect(settings.postgres_dsn)
     await client.connect(settings.amqp_dsn)
     event_handlers.bind_handlers()
     await event_handlers.amqp_publisher.connect(settings.amqp_dsn)

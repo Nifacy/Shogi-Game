@@ -2,7 +2,6 @@ from tortoise import Model, fields, Tortoise
 from tortoise.exceptions import NoValuesFetched
 
 from services.private_room_service.domain import adapters, models
-from settings import settings
 
 
 class PrivateRoomDBModel(Model):
@@ -19,9 +18,9 @@ class PlayerDBModel(Model):
 
 
 class DefaultStorage(adapters.PrivateRoomStorage):
-    async def connect(self):
+    async def connect(self, credentials: str):
         await Tortoise.init(
-            db_url=settings.postgres_dsn,
+            db_url=credentials,
             modules={'models': ['services.private_room_service.infrastructure.storage']}
         )
 

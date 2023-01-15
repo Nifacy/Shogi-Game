@@ -6,6 +6,8 @@ from services.gateway_service.schemas import AccountInfo
 from rpc_service import RpcClientBuilder
 from contracts import account_service
 
+from services.gateway_service.settings import settings
+
 
 users_router = APIRouter()
 accounts_service_client = RpcClientBuilder.from_contract(account_service.Contract)
@@ -13,7 +15,7 @@ accounts_service_client = RpcClientBuilder.from_contract(account_service.Contrac
 
 @users_router.on_event('startup')
 async def open_connections():
-    await accounts_service_client.connect('amqp://guest:guest@localhost')
+    await accounts_service_client.connect(settings.amqp_dsn)
 
 
 @users_router.on_event('shutdown')

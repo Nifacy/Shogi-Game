@@ -7,6 +7,8 @@ from rpc_service import RpcClientBuilder
 from services.gateway_service.dependencies import get_current_user
 from services.gateway_service.websocket_formatters import ConnectionContext, WebSocketCommandReceiver, WebSocketSessionEventObserver
 
+from services.gateway_service.settings import settings
+
 
 session_router = APIRouter()
 session_service_client = RpcClientBuilder.from_contract(session_service.Contract)
@@ -15,8 +17,8 @@ session_events_listener = AmqpEventListener('session_service.sessions.events')
 
 @session_router.on_event('startup')
 async def open_connections():
-    await session_service_client.connect('amqp://guest:guest@localhost')
-    await session_events_listener.connect('amqp://guest:guest@localhost')
+    await session_service_client.connect(settings.amqp_dsn)
+    await session_events_listener.connect(settings.amqp_dsn)
 
 
 @session_router.on_event('shutdown')
