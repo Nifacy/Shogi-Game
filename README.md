@@ -15,25 +15,29 @@ Tortoise ORM.
 
 # Запуск
 
-## Бэкенд
+## Бэкенд. Запуск в docker
 
-Проект имеет следующие зависимости:
-* Брокер сообщений: Rabbitmq
-* База данных: Postgres
+Для запуска докер контейнеров бэкенда перейдите в папку `src/frontend/`. В нем вы находится файл `credentials.env`,
+в котором находятся все данные для входа (например, для rabbitmq, postgres). Поменяйте в нем значения
+переменных окружения на нужные вам.
 
-Установите все необходимые зависимости проекта через следующую команду
+Далее, перейдите в терминал и запустите следующую команду (обязательно запускать из дериктории `src/frontend`!)
 
 ```bash
-pip install -r src/backend/requirements.txt
+docker-compose build
 ```
 
-Перейдите в папку `src/backed` и запустите каждый микросервис в отдельном окне терминала через следующие команды (каждая команда соответствует запуску 1 микросервиса)
+В docker будут созданы все необходимые образы. Осталось ввести следующую команду
 
+```bash
+docker-compose up
 ```
-python -m services.accounts_service.main
-python -m services.auth_service.main
-python -m services.private_room_service.main
-python -m services.searcher_service.main
-python -m services.session_service.main
-uvicorn services.gateway_service.main:app --host localhost --port 5000
+
+В начальные моменты времени работы сервисов некоторые могут падать и перезагружаться. Это связано с тем,
+что сервисы пытаются подключиться к rabbitmq или postgres, когда они еще не были инициализированы.
+
+Для остановки контейнеров нажмите `Ctrl + C`, а для удаления введите следующую команду
+
+```bash
+docker-compose down
 ```

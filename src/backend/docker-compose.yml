@@ -6,8 +6,8 @@ services:
   rabbit:
     image: rabbitmq:3.11-management
     environment:
-      - RABBITMQ_DEFAULT_USER=guest
-      - RABBITMQ_DEFAULT_PASS=guest
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASSWORD}
     ports:
       - 15672:15672
       - 5672:5672
@@ -16,7 +16,8 @@ services:
     image: postgres
     restart: always
     environment:
-      - POSTGRES_PASSWORD=password
+      - POSTGRES_USER=${POSTGRES_DEFAULT_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_DEFAULT_PASSWORD}
     ports:
       - 5432:5432
 
@@ -26,8 +27,8 @@ services:
       dockerfile: ./dockerfiles/accounts_service
     restart: on-failure
     environment:
-      - AMQP_DSN=amqp://guest:guest@rabbit
-      - POSTGRES_DSN=postgres://postgres:password@db
+      - AMQP_DSN=amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASSWORD}@rabbit
+      - POSTGRES_DSN=postgres://${POSTGRES_DEFAULT_USER}:${POSTGRES_DEFAULT_PASSWORD}@db
       
   auth-service:
     build:
@@ -35,8 +36,8 @@ services:
       dockerfile: ./dockerfiles/auth_service
     restart: on-failure
     environment:
-      - AMQP_DSN=amqp://guest:guest@rabbit
-      - POSTGRES_DSN=postgres://postgres:password@db
+      - AMQP_DSN=amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASSWORD}@rabbit
+      - POSTGRES_DSN=postgres://${POSTGRES_DEFAULT_USER}:${POSTGRES_DEFAULT_PASSWORD}@db
 
   private-room-service:
     build:
@@ -44,8 +45,8 @@ services:
       dockerfile: ./dockerfiles/private_room_service
     restart: on-failure
     environment:
-      - AMQP_DSN=amqp://guest:guest@rabbit
-      - POSTGRES_DSN=postgres://postgres:password@db
+      - AMQP_DSN=amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASSWORD}@rabbit
+      - POSTGRES_DSN=postgres://${POSTGRES_DEFAULT_USER}:${POSTGRES_DEFAULT_PASSWORD}@db
 
   searcher-service:
     build:
@@ -53,8 +54,8 @@ services:
       dockerfile: ./dockerfiles/searcher_service
     restart: on-failure
     environment:
-      - AMQP_DSN=amqp://guest:guest@rabbit
-      - POSTGRES_DSN=postgres://postgres:password@db
+      - AMQP_DSN=amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASSWORD}@rabbit
+      - POSTGRES_DSN=postgres://${POSTGRES_DEFAULT_USER}:${POSTGRES_DEFAULT_PASSWORD}@db
 
   session-service:
     build:
@@ -62,8 +63,8 @@ services:
       dockerfile: ./dockerfiles/session_service
     restart: on-failure
     environment:
-      - AMQP_DSN=amqp://guest:guest@rabbit
-      - POSTGRES_DSN=postgres://postgres:password@db
+      - AMQP_DSN=amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASSWORD}@rabbit
+      - POSTGRES_DSN=postgres://${POSTGRES_DEFAULT_USER}:${POSTGRES_DEFAULT_PASSWORD}@db
 
   gateway-service:
     build:
@@ -71,7 +72,7 @@ services:
       dockerfile: ./dockerfiles/gateway_service
     restart: on-failure
     environment:
-      - AMQP_DSN=amqp://guest:guest@rabbit
-      - POSTGRES_DSN=postgres://postgres:password@db
+      - AMQP_DSN=amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASSWORD}@rabbit
+      - POSTGRES_DSN=postgres://${POSTGRES_DEFAULT_USER}:${POSTGRES_DEFAULT_PASSWORD}@db
     ports:
       - 5000:5000
