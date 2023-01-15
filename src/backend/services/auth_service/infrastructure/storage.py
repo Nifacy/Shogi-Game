@@ -3,7 +3,6 @@ from tortoise import Model, fields, Tortoise
 
 from services.auth_service.domain.adapters import CredentialsStorage, AlreadyRegistered, NotExists
 from services.auth_service.domain.models import Password, Login
-from settings import settings
 from ..domain import models
 
 
@@ -29,7 +28,6 @@ def _verify_password(plain_password: Password, hashed_password: Password) -> boo
     :return: возвращает `True` в случае, если пароль верный, `False` - в противном
     """
 
-    print(f'>>> {type(plain_password)}, {type(hashed_password)}')
     return pwd_context.verify(plain_password, hashed_password)
 
 
@@ -40,9 +38,9 @@ class CredentialsDBModel(Model):
 
 
 class CredentialsDatabase(CredentialsStorage):
-    async def connect(self):
+    async def connect(self, credentials: str):
         await Tortoise.init(
-            db_url=settings.postgres_dsn,
+            db_url=credentials,
             modules={'models': ['services.auth_service.infrastructure.storage']}
         )
 

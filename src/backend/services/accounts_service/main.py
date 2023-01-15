@@ -5,7 +5,7 @@ from rpc_service.utils import ServiceLauncher
 from services.accounts_service.infrastructure import AccountDatabase
 from services.accounts_service.methods import Implementation
 from rpc_service import RpcServiceBuilder
-from settings import settings
+from .settings import settings
 
 
 db = AccountDatabase()
@@ -15,7 +15,7 @@ launcher = ServiceLauncher(service)
 
 
 async def main():
-    await db.connect()
+    await db.connect(settings.postgres_dsn)
     await launcher.start(settings.amqp_dsn)
 
 

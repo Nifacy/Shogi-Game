@@ -1,6 +1,5 @@
 from tortoise import Model, fields, Tortoise
 from services.accounts_service.domain import adapters, AccountModel
-from settings import settings
 
 
 class AccountDBModel(Model):
@@ -14,10 +13,9 @@ class AccountDBModel(Model):
 class AccountDatabase:
     """Реализация хранилища аккаунтов на основе Postgres и Tortoise ORM"""
 
-    @staticmethod
-    async def connect():
+    async def connect(self, credentials):
         await Tortoise.init(
-            db_url=settings.postgres_dsn,
+            db_url=credentials,
             modules={'models': ['services.accounts_service.infrastructure.account_database']}
         )
 

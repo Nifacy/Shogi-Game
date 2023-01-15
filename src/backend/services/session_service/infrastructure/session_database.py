@@ -1,10 +1,11 @@
 import json
 
 from tortoise import Model, fields, Tortoise
+
+from game_model.game.model import Player
 from services.session_service.domain.adapters import SessionStorage, NotExists
 from services.session_service.domain.factories import state_factory
 from services.session_service.domain.models import SessionModel, PlayerConnectionState, PlayerModel
-from settings import settings
 from state_encoder import StateEncoder
 
 
@@ -19,6 +20,7 @@ class SessionDBModel(Model):
 
 class SessionPlayerDBModel(Model):
     name = fields.TextField()
+    game_id = fields.IntField()
     connection_state = fields.CharEnumField(PlayerConnectionState, default=PlayerConnectionState.DISCONNECTED)
     connected_session: fields.ForeignKeyRelation[SessionDBModel] = fields.ForeignKeyField(
         'models.SessionDBModel', related_name='connected_players'
@@ -26,9 +28,9 @@ class SessionPlayerDBModel(Model):
 
 
 class SessionDatabase(SessionStorage):
-    async def connect(self):
+    async def connect(self, credentials: str):
         await Tortoise.init(
-            db_url=settings.postgres_dsn,
+            db_url=credentials,
             modules={'models': ['services.session_service.infrastructure.session_database']}
         )
 
@@ -36,7 +38,7 @@ class SessionDatabase(SessionStorage):
 
     async def _serialize_session(self, record: SessionDBModel) -> SessionModel:
         player_records = await record.connected_players.all()
-        first_player, second_player = [PlayerModel(_name=player.name) for player in player_records]
+        first_player, second_player = [PlayerModel(_name=player.name, _in_game=Player(player.game_id)) for player in player_records]
 
         return SessionModel(
             _session_id=record.id,
@@ -49,12 +51,12 @@ class SessionDatabase(SessionStorage):
         )
 
     async def create(self, first_player_name: str, second_player_name: str) -> SessionModel:
-        first_player, second_player = PlayerModel(first_player_name), PlayerModel(second_player_name)
-        state = state_factory(first_player=first_player, second_player=second_player)
+        first_player, second_player = PlayerModel(first_player_name, Player(0)), PlayerModel(second_player_name, Player(1))
+        state = state_factory(first_player=first_player.in_game, second_player=second_player.in_game)
 
         session_record = await SessionDBModel.create(state=state)
-        await SessionPlayerDBModel.create(name=first_player.name, connected_session=session_record)
-        await SessionPlayerDBModel.create(name=second_player_name, connected_session=session_record)
+        await SessionPlayerDBModel.create(name=first_player.name, game_id=first_player.in_game.id, connected_session=session_record)
+        await SessionPlayerDBModel.create(name=second_player_name, game_id=second_player.in_game.id, connected_session=session_record)
 
         return await self._serialize_session(session_record)
 
@@ -89,7 +91,9 @@ class SessionDatabase(SessionStorage):
         if record is None:
             raise NotExists(session_id=session_id)
 
-        for player in record.connected_players:
+        players = await record.connected_players.all()
+
+        for player in players:
             await player.delete()
 
         await record.delete()

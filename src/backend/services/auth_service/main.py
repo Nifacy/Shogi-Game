@@ -4,7 +4,7 @@ from rpc_service import RpcServiceBuilder
 from rpc_service.utils import ServiceLauncher
 from services.auth_service import infrastructure
 from services.auth_service.methods import Implementation
-from settings import settings
+from .settings import settings
 
 
 db = infrastructure.CredentialsDatabase()
@@ -17,7 +17,7 @@ launcher = ServiceLauncher(service)
 
 
 async def main():
-    await db.connect()
+    await db.connect(settings.postgres_dsn)
     await launcher.start(settings.amqp_dsn)
 
 

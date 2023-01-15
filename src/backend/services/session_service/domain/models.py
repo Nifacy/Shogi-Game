@@ -22,8 +22,9 @@ class PlayerConnectionState(str, Enum):
 
 
 @dataclass
-class PlayerModel(Player):
+class PlayerModel:
     _name: str
+    _in_game: Player
 
     def __post_init__(self):
         super().__init__()
@@ -32,8 +33,12 @@ class PlayerModel(Player):
     def name(self) -> str:
         return self._name
 
+    @property
+    def in_game(self) -> Player:
+        return self._in_game
+
     def __repr__(self):
-        return f"Player({self._name!r})"
+        return f"Player(name={self._name!r}, id={self._in_game.id})"
 
 
 @dataclass

@@ -4,7 +4,7 @@ from rpc_service import RpcServiceBuilder
 from rpc_service.utils import ServiceLauncher
 from services.searcher_service import infrastructure, event_handlers
 from services.searcher_service.methods import Implementation
-from settings import settings
+from .settings import settings
 
 client = infrastructure.SessionServiceClient()
 db = infrastructure.DefaultStorage()

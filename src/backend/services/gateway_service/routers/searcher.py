@@ -9,6 +9,9 @@ from rpc_service import RpcClientBuilder
 from services.gateway_service import schemas
 from services.gateway_service.dependencies import get_current_user
 
+from services.gateway_service.settings import settings
+
+
 searcher_router = APIRouter()
 searcher_listener = AmqpEventListener('searcher_service.events')
 searcher_service_client = RpcClientBuilder.from_contract(searcher_service.Contract)
@@ -22,8 +25,8 @@ async def close_connections():
 
 @searcher_router.on_event('startup')
 async def open_connections():
-    await searcher_listener.connect('amqp://guest:guest@localhost')
-    await searcher_service_client.connect('amqp://guest:guest@localhost')
+    await searcher_listener.connect(settings.amqp_dsn)
+    await searcher_service_client.connect(settings.amqp_dsn)
 
 
 @searcher_router.post('/start')

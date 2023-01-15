@@ -5,6 +5,7 @@ from starlette import status
 from contracts import account_service, auth_service
 from rpc_service import RpcClientBuilder
 from services.gateway_service import schemas
+from services.gateway_service.settings import settings
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='/auth/login')
 
@@ -16,8 +17,8 @@ class AuthDependency:
         self._connected = False
 
     async def _connect_clients(self):
-        await self._accounts_service_client.connect('amqp://guest:guest@localhost')
-        await self._auth_service_client.connect('amqp://guest:guest@localhost')
+        await self._accounts_service_client.connect(settings.amqp_dsn)
+        await self._auth_service_client.connect(settings.amqp_dsn)
 
     async def __call__(self, token: str = Depends(oauth2_scheme)) -> schemas.AccountInfo:
         if not self._connected:

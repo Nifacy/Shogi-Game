@@ -9,6 +9,9 @@ from rpc_service import RpcClientBuilder
 from services.gateway_service import schemas
 from services.gateway_service.dependencies import get_current_user
 
+from services.gateway_service.settings import settings
+
+
 private_room_router = APIRouter()
 private_room_listener = AmqpEventListener('private_room_service.events')
 private_room_service_client = RpcClientBuilder.from_contract(private_room_service.Contract)
@@ -16,8 +19,8 @@ private_room_service_client = RpcClientBuilder.from_contract(private_room_servic
 
 @private_room_router.on_event('startup')
 async def open_connections():
-    await private_room_listener.connect('amqp://guest:guest@localhost')
-    await private_room_service_client.connect('amqp://guest:guest@localhost')
+    await private_room_listener.connect(settings.amqp_dsn)
+    await private_room_service_client.connect(settings.amqp_dsn)
 
 
 @private_room_router.on_event('shutdown')

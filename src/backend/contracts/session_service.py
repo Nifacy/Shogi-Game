@@ -78,3 +78,5 @@ class Contract(RpcContract):
     @endpoint
     async def get_session_game_state(self, session_id: int) -> GameStateResponse:
         raise NotImplementedError()
+
+print(f'>>>>>> {id(ExecuteCommandError)}')
