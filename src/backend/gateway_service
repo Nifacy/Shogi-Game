@@ -1,0 +1,12 @@
+FROM python:3.11-slim-buster
+
+COPY amqp_events/ /amqp_events/
+ADD contracts/ /contracts/
+ADD rpc_service/ /rpc_service/
+ADD services/ /services/
+COPY game_model/ /game_model/
+COPY state_encoder/ /state_encoder/
+ADD services/gateway_service/requirements.txt /requirements.txt
+
+RUN pip3 install -r requirements.txt
+CMD [ "uvicorn", "services.gateway_service.main:app", "--host", "0.0.0.0", "--port", "5000" ]

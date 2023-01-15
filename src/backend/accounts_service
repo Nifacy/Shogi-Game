@@ -1,0 +1,9 @@
+FROM python:3.11-slim-buster
+
+COPY contracts/ /contracts/
+COPY rpc_service/ /rpc_service/
+COPY services/ /services/
+COPY services/auth_service/requirements.txt /requirements.txt
+
+RUN pip3 install -r requirements.txt
+CMD [ "python", "-m", "services.accounts_service.main" ]

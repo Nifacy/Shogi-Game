@@ -1,0 +1,12 @@
+FROM python:3.11-slim-buster
+
+COPY amqp_events/ /amqp_events/
+COPY contracts/ /contracts/
+COPY rpc_service/ /rpc_service/
+COPY services/ /services/
+COPY game_model/ /game_model/
+COPY state_encoder/ /state_encoder/
+COPY services/searcher_service/requirements.txt /requirements.txt
+
+RUN pip3 install -r requirements.txt
+CMD [ "python", "-m", "services.searcher_service.main" ]
