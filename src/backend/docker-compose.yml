@@ -23,16 +23,16 @@ services:
   accounts-service:
     build:
       context: .
-      dockerfile: accounts_service
+      dockerfile: ./dockerfiles/accounts_service
     restart: on-failure
     environment:
       - AMQP_DSN=amqp://guest:guest@rabbit
       - POSTGRES_DSN=postgres://postgres:password@db
-
+      
   auth-service:
     build:
       context: .
-      dockerfile: auth_service
+      dockerfile: ./dockerfiles/auth_service
     restart: on-failure
     environment:
       - AMQP_DSN=amqp://guest:guest@rabbit
@@ -41,7 +41,7 @@ services:
   private-room-service:
     build:
       context: .
-      dockerfile: private_room_service
+      dockerfile: ./dockerfiles/private_room_service
     restart: on-failure
     environment:
       - AMQP_DSN=amqp://guest:guest@rabbit
@@ -50,7 +50,7 @@ services:
   searcher-service:
     build:
       context: .
-      dockerfile: searcher_service
+      dockerfile: ./dockerfiles/searcher_service
     restart: on-failure
     environment:
       - AMQP_DSN=amqp://guest:guest@rabbit
@@ -59,7 +59,7 @@ services:
   session-service:
     build:
       context: .
-      dockerfile: session_service
+      dockerfile: ./dockerfiles/session_service
     restart: on-failure
     environment:
       - AMQP_DSN=amqp://guest:guest@rabbit
@@ -68,7 +68,7 @@ services:
   gateway-service:
     build:
       context: .
-      dockerfile: gateway_service
+      dockerfile: ./dockerfiles/gateway_service
     restart: on-failure
     environment:
       - AMQP_DSN=amqp://guest:guest@rabbit
